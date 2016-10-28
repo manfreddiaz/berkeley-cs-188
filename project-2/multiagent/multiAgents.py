@@ -76,7 +76,7 @@ class ReflexAgent(Agent):
         ghostDistance = min(manhattan_distance(newPos, ghost.configuration.pos) for ghost in newGhostStates)
         closestFoodDistance = min(manhattan_distance(newPos, nextFood) for nextFood in newFood) if newFood else 0
         f1 = -len(newFood)
-        f2 = - 2 / (ghostDistance + 1) if min(newScaredTimes) == 0 else 0.5 / (ghostDistance + 1)
+        f2 = - 2 / (ghostDistance + 1) if min(newScaredTimes) == 0 else 0.3 / (ghostDistance + 1)
         f3 = 0.5 / (closestFoodDistance + 1)
         f4 = min(newScaredTimes) * 0.5
         return f1 + f2 + f3 + f4
