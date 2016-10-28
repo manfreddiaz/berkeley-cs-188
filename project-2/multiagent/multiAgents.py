@@ -67,19 +67,27 @@ class ReflexAgent(Agent):
         to create a masterful evaluation function.
         """
         # Useful information you can extract from a GameState (pacman.py)
-        successorGameState = currentGameState.generatePacmanSuccessor(action)
-        newPos = successorGameState.getPacmanPosition()
-        newFood = [food for food in successorGameState.getFood().asList() if food]
-        newGhostStates = successorGameState.getGhostStates()
-        newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
+        successor_game_state = currentGameState.generatePacmanSuccessor(action)
+        next_pacman_position = successor_game_state.getPacmanPosition()
+        next_food = [food for food in successor_game_state.getFood().asList() if food]
+        next_ghosts_states = successor_game_state.getGhostStates()
+        next_ghosts_scared_timers = [ghostState.scaredTimer for ghostState in next_ghosts_states]
         "*** YOUR CODE HERE ***"
-        ghostDistance = min(manhattan_distance(newPos, ghost.configuration.pos) for ghost in newGhostStates)
-        closestFoodDistance = min(manhattan_distance(newPos, nextFood) for nextFood in newFood) if newFood else 0
-        f1 = -len(newFood)
-        f2 = - 2 / (ghostDistance + 1) if min(newScaredTimes) == 0 else 0.5 / (ghostDistance + 1)
-        f3 = 0.5 / (closestFoodDistance + 1)
-        f4 = min(newScaredTimes) * 0.5
-        return f1 + f2 + f3 + f4
+        # Calculations
+        ghost_distance = min(manhattan_distance(next_pacman_position, ghost.configuration.pos) for ghost in next_ghosts_states)
+        closest_food_distance = min(manhattan_distance(next_pacman_position, nextFood) for nextFood in next_food) if next_food else 0
+        scared_time = min(next_ghosts_scared_timers)
+
+        # It is bad to have remaining pellets, very bad!
+        remaining_food_feature = -len(next_food)
+        # It is bad to be closed to ghost, but if they are harmless, is not so bad (better not to eat them)
+        ghost_distance_feature = -2 / (ghost_distance + 1) if scared_time == 0 else 0.5 / (ghost_distance + 1)
+        # It is bad to be fat from food
+        closest_food_feature = 0.5 / (closest_food_distance + 1)
+        # Power pellets are good, but not that good
+        power_pellets_feature = scared_time * 0.5
+
+        return remaining_food_feature + ghost_distance_feature + closest_food_feature + power_pellets_feature
 
 def manhattan_distance(point1, point2):
     return abs(point1[0] - point2[0]) + abs(point1[1] - point2[1])
