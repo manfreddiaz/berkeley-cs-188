@@ -148,32 +148,40 @@ class MinimaxAgent(MultiAgentSearchAgent):
 
     def minimize_value(self, state, agent, depth):
         successor_states = [(state.generateSuccessor(agent, action), action) for action in state.getLegalActions(agent)]
-        successor_values = [(sys.maxint, None)]
+
+        if len(successor_states) == 0:
+            return self.evaluationFunction(state), None
+
+        value = sys.maxint
+        value_action = None
 
         next_agent = agent + 1
         for successor_state, action in successor_states:
             next_value, next_action = self.minimax_value(successor_state, next_agent, depth)
-            successor_values.append((next_value, action))
+            if next_value < value:
+                value = next_value
+                value_action = action
 
-        if len(successor_values) == 1:
-            return self.evaluationFunction(state), None
-
-        return min(successor_values)
+        return value, value_action
 
     def maximize_value(self, state, agent, depth):
         successor_states = [(state.generateSuccessor(agent, action), action) for action in state.getLegalActions(agent)]
-        successor_values = [(-sys.maxint, None)]
+
+        if len(successor_states) == 0:
+            return self.evaluationFunction(state), None
+
+        value = -sys.maxint
+        value_action = None
 
         next_agent = agent + 1
         next_depth = depth + 1
         for successor_state, action in successor_states:
             next_value, next_action = self.minimax_value(successor_state, next_agent, next_depth)
-            successor_values.append((next_value, action))
+            if next_value > value:
+                value = next_value
+                value_action = action
 
-        if len(successor_values) == 1:
-            return self.evaluationFunction(state), None
-
-        return max(successor_values)
+        return value, value_action
 
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
