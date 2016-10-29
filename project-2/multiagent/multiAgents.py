@@ -12,6 +12,8 @@
 # Pieter Abbeel (pabbeel@cs.berkeley.edu).
 from math import log
 
+import sys
+
 from util import manhattanDistance
 from game import Directions
 import random, util
@@ -121,6 +123,8 @@ class MultiAgentSearchAgent(Agent):
         self.index = 0 # Pacman is always agent index 0
         self.evaluationFunction = util.lookup(evalFn, globals())
         self.depth = int(depth)
+        self.current_depth = 0
+
 
 class MinimaxAgent(MultiAgentSearchAgent):
     """
@@ -128,24 +132,49 @@ class MinimaxAgent(MultiAgentSearchAgent):
     """
 
     def getAction(self, gameState):
-        """
-          Returns the minimax action from the current gameState using self.depth
-          and self.evaluationFunction.
+        max_value, next_action = self.minimax_value(gameState, self.index, 0)
+        return next_action
 
-          Here are some method calls that might be useful when implementing minimax.
+    def minimax_value(self, state, agent, depth):
+        num_agents = state.getNumAgents()
 
-          gameState.getLegalActions(agentIndex):
-            Returns a list of legal actions for an agent
-            agentIndex=0 means Pacman, ghosts are >= 1
+        if depth == self.depth and agent % num_agents == 0:
+            return self.evaluationFunction(state), None
 
-          gameState.generateSuccessor(agentIndex, action):
-            Returns the successor game state after an agent takes an action
+        if agent % num_agents == 0:
+            return self.maximize_value(state, agent % num_agents, depth)
 
-          gameState.getNumAgents():
-            Returns the total number of agents in the game
-        """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return self.minimize_value(state, agent % num_agents, depth)
+
+    def minimize_value(self, state, agent, depth):
+        successor_states = [(state.generateSuccessor(agent, action), action) for action in state.getLegalActions(agent)]
+        successor_values = [(sys.maxint, None)]
+
+        next_agent = agent + 1
+        for successor_state, action in successor_states:
+            next_value, next_action = self.minimax_value(successor_state, next_agent, depth)
+            successor_values.append((next_value, action))
+
+        if len(successor_values) == 1:
+            return self.evaluationFunction(state), None
+
+        return min(successor_values)
+
+    def maximize_value(self, state, agent, depth):
+        successor_states = [(state.generateSuccessor(agent, action), action) for action in state.getLegalActions(agent)]
+        successor_values = [(-sys.maxint, None)]
+
+        next_agent = agent + 1
+        next_depth = depth + 1
+        for successor_state, action in successor_states:
+            next_value, next_action = self.minimax_value(successor_state, next_agent, next_depth)
+            successor_values.append((next_value, action))
+
+        if len(successor_values) == 1:
+            return self.evaluationFunction(state), None
+
+        return max(successor_values)
+
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
