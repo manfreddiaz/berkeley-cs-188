@@ -248,20 +248,66 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
 
         return value, value_action
 
+
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
       Your expectimax agent (question 4)
     """
 
     def getAction(self, gameState):
-        """
-          Returns the expectimax action using self.depth and self.evaluationFunction
+        max_value, next_action = self.expectimax_value(gameState, self.index, 0)
+        return next_action
 
-          All ghosts should be modeled as choosing uniformly at random from their
-          legal moves.
-        """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+    def expectimax_value(self, state, agent, depth):
+        num_agents = state.getNumAgents()
+
+        if depth == self.depth and agent % num_agents == 0:
+            return self.evaluationFunction(state), None
+
+        if agent % num_agents == 0:
+            return self.maximize_value(state, agent % num_agents, depth)
+
+        return self.probabilistic_value(state, agent % num_agents, depth)
+
+    def probabilistic_value(self, state, agent, depth):
+        successor_states = [(state.generateSuccessor(agent, action), action) for action in state.getLegalActions(agent)]
+
+        if len(successor_states) == 0:
+            return self.evaluationFunction(state), None
+
+        value = 0
+        value_action = None
+
+        next_agent = agent + 1
+        events = 0
+        for successor_state, action in successor_states:
+            next_value, next_action = self.expectimax_value(successor_state, next_agent, depth)
+            value += next_value
+            events += 1
+
+        return float(value) / events, value_action
+
+    def maximize_value(self, state, agent, depth):
+        successor_states = [(state.generateSuccessor(agent, action), action) for action in state.getLegalActions(agent)]
+
+        if len(successor_states) == 0:
+            return self.evaluationFunction(state), None
+
+        value = -sys.maxint
+        value_action = None
+
+        next_agent = agent + 1
+        next_depth = depth + 1
+        for successor_state, action in successor_states:
+            next_value, next_action = self.expectimax_value(successor_state, next_agent, next_depth)
+            if next_value > value:
+                value = next_value
+                value_action = action
+
+        return value, value_action
+
+
+
 
 def betterEvaluationFunction(currentGameState):
     """
